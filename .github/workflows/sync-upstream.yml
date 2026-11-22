@@ -79,7 +79,6 @@ jobs:
             echo "📦 恢复本地的 last_activity.md 文件"
             mv .github/last_activity.md.backup .github/last_activity.md
             git add .github/last_activity.md
-            git commit -m "保留本地 last_activity.md 文件" || echo "没有需要提交的更改"
           fi
           # 恢复本仓库自己的 workflow 文件，丢弃合并进来的上游 workflow 变更
           if [ -d ".github/workflows.backup" ]; then
