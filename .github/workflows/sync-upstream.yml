@@ -8,10 +8,8 @@ on:
   workflow_dispatch:
 
 # 注意：不要在此声明 permissions 块。
-# 同步推送内容包含 .github/workflows/ 下的上游变更，修改 workflow 文件需要
-# token 的 workflows 权限；而该权限无法在 workflow 的 permissions 块中声明。
-# 声明 permissions: contents: write 反而会把 token 收窄为仅 contents、丢掉
-# workflows 权限导致推送被拒。此处继承仓库默认权限（Read and write）即可。
+# 本工作流需要推送代码变更（contents 写权限），由仓库默认权限（Read and write）
+# 授予即可；显式声明 permissions 反而会把 token 收窄，导致可用权限更少。
 
 jobs:
   sync-upstream:
@@ -51,7 +49,13 @@ jobs:
             echo "📦 备份本地的 last_activity.md 文件"
             cp .github/last_activity.md .github/last_activity.md.backup
           fi
-      
+          # 备份本仓库自己的 workflow 文件。
+          # 修改 .github/workflows/ 文件需要 GitHub App 的 workflows 权限，
+          # GITHUB_TOKEN 无法获得该权限，因此上游的 workflow 变更不随同步推送，
+          # 推送前恢复本仓库自己的版本，否则 push 会被 GitHub 拒绝。
+          rm -rf .github/workflows.backup
+          cp -r .github/workflows .github/workflows.backup
+          
       - name: 合并上游变更
         run: |
           # 检查当前分支
@@ -75,9 +79,16 @@ jobs:
             echo "📦 恢复本地的 last_activity.md 文件"
             mv .github/last_activity.md.backup .github/last_activity.md
             git add .github/last_activity.md
-            git commit -m "保留本地 last_activity.md 文件" || echo "没有需要提交的更改"
           fi
-      
+          # 恢复本仓库自己的 workflow 文件，丢弃合并进来的上游 workflow 变更
+          if [ -d ".github/workflows.backup" ]; then
+            echo "📦 恢复本仓库的 workflow 文件（不推送上游的 workflow 变更）"
+            rm -rf .github/workflows
+            mv .github/workflows.backup .github/workflows
+            git add .github/workflows
+          fi
+          git commit -m "保留本地需要保留的文件" || echo "没有需要提交的更改"
+          
       - name: 推送更新
         run: |
           # 推送到当前分支
