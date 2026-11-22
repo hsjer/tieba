@@ -7,10 +7,13 @@ on:
   # 允许手动触发
   workflow_dispatch:
 
-# 同步需要把合并结果推送到仓库，必须显式授予写权限
+# 同步需要把合并结果推送到仓库，必须显式授予写权限：
+# - contents: write：推送代码变更
+# - workflows: write：推送内容包含 .github/workflows/ 文件时必需
 # （仓库默认 workflow 权限为只读时，不声明 permissions 会导致 push 被拒）
 permissions:
   contents: write
+  workflows: write
 
 jobs:
   sync-upstream:
