@@ -7,11 +7,11 @@ on:
   # 允许手动触发
   workflow_dispatch:
 
-# 同步需要把合并结果推送到仓库，显式授予 contents 写权限。
-# 注：修改 .github/workflows/ 文件需要 token 的 workflows 权限，
-# 该权限无法在 workflow 内声明，由仓库默认权限（Read and write）授予。
-permissions:
-  contents: write
+# 注意：不要在此声明 permissions 块。
+# 同步推送内容包含 .github/workflows/ 下的上游变更，修改 workflow 文件需要
+# token 的 workflows 权限；而该权限无法在 workflow 的 permissions 块中声明。
+# 声明 permissions: contents: write 反而会把 token 收窄为仅 contents、丢掉
+# workflows 权限导致推送被拒。此处继承仓库默认权限（Read and write）即可。
 
 jobs:
   sync-upstream:
